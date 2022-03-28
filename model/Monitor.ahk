@@ -2,19 +2,22 @@
 SendMode Input
 SetWorkingDir, %A_ScriptDir%
 
-class Tracker{
+class Monitor{
     static queueCap:=5
     static objs
     static callback
+    static interval:=10000
     __New(cap,callback){
         ;todo  param validator
         this.queueCap:=cap
-        this.objs.SetCapacity(1)
         this.callback:=callback
+        this.timer := ObjBindMethod(this, "CheckCallback")
+        timer := this.timer
+        SetTimer % timer, % this.interval
         ; SetTimer, check, 10000
     }
     ;增加监听
-    Add(key,value){
+    addTracker(key,value){
         if(key=nil)
         if(this.objs.HasKey(key)){
             this.objs[key]:=value
@@ -26,7 +29,7 @@ class Tracker{
             this.objs[key]:=value
         }
     }
-    delete(key){
+    deleteTracker(key){
         if(this.objs[Key]){
             this.objs.Delete(key)
         }
@@ -41,18 +44,14 @@ class Tracker{
     }
 }
 
-; colours := Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00)
-; ; The above expression could be used directly in place of "colours" below:
-; for k, v in colours
-;     s .= k "=" v "`n"
-; MsgBox % s
-
-obj:=new Tracker(5,Func("callback"))
+;;创建监听    将callback方法注册
+obj:=new Monitor(5,Func("callback"))
 ; obj.Add("s",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
-obj.Add("s",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
+;增加一个需要监听的对象
+obj.addTracker("s",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
 ; obj.Add("b",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
-obj.Delete("s")
-; obj.check()
+obj.deleteTracker("s")
+; obj.check();人肉触发全部check
 
 callback(obj){
      for k, v in obj
@@ -60,10 +59,7 @@ callback(obj){
     MsgBox % s
     ; Log(s)
 }
-;SetTimer 只能绑定label 所以只能将属性外挂到label上
-check:
-    obj.CheckCallback()
-return
+
 
 1::
 return 
