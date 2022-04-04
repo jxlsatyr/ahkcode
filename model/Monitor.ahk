@@ -18,7 +18,7 @@ class Monitor{
     }
     ;增加监听
     addTracker(key,value){
-        if(key=nil)
+        if(key)
         if(this.objs.HasKey(key)){
             this.objs[key]:=value
         }
@@ -51,7 +51,7 @@ obj:=new Monitor(5,Func("callback"))
 obj.addTracker("s",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
 ; obj.Add("b",Object("red", 0xFF0000, "blue", 0x0000FF, "green", 0x00FF00))
 obj.deleteTracker("s")
-; obj.check();人肉触发全部check
+;obj.check();人肉触发全部check
 
 callback(obj){
      for k, v in obj
