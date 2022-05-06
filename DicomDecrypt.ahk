@@ -1,7 +1,8 @@
 ﻿#SingleInstance, Force
-#Include MySQL.ahk
+#Include JSON.ahk
+#Include HTTPRequest.ahk
 
-class Decrypt {
+class DicomDecrypt {
 
 	; 7-Zip解压工具路径
 	static 7Zip := "C:\Program Files\7-Zip\7z.exe"
@@ -10,13 +11,19 @@ class Decrypt {
 	; 解密进度监控
 	timer := ObjBindMethod(this, "Compress")
 
-	__New(ProjectId, DirName) {
-		; 解压至文件路径
+	__New(TenantID, ProjectId, DirName, ACCNO) {
+		this.TenantID := TenantID
+		this.ProjectId := ProjectId
+		; 要解压的文件路径
 		this.SrcPath := "D:\" ProjectId "\source\" DirName
 		; 解密至文件路径
 		this.DecryptPath := "D:\" ProjectId "\decrypt\" DirName
 		; 打包至文件路径
 		this.UploadPath := "Z:\ebm_data\upload\" ProjectId "\" DirName ".zip"
+		; 上传接口用路径
+		this.UploadPathAPI := "/data/eimage/ebm_data/upload/" ProjectId "/" DirName ".zip"
+		; ACCNO
+		this.ACCNO := ACCNO
 	}
 	
 	Start() {
@@ -41,22 +48,11 @@ class Decrypt {
 		{
 			SetTimer,, Off  ; 即此处计时器关闭自己.
 			WinClose, ahk_pid %PID%
-			
 			; 3.打包到指定目录
 			RunWait , % this.7Zip " a -mx1 -tzip " this.UploadPath " " this.DecryptPath "\*"
-			
 			; 调用导入微云接口
-			URL := "http://10.1.1.100:8022/dicomExport/exportAllDicomToMoveR"
-			HttpObj := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-			HttpObj.Open("POST", URL)
-			HttpObj.SetRequestHeader("Content-Type", "application/json")
-			Body := {"realDo":true,"srcProject":{"tenantId":TenantID,"projectId":ProjectID},"taskId":TaskID}
-			HttpObj.Send(Body)
-			Result := HttpObj.ResponseText
-			Accnos := ""
-			if (Result.status != 0) {
-				MsgBox, 调用导入微云接口失败
-			} 
+			Body := JSON.Dump({"accnoAndPaths":[{"accno":this.ACCNO,"path":this.UploadPathAPI}],"realDo":true,"srcProject":{"projectId":this.ProjectID,"tenantId":this.TenantID}})
+			POST("http://10.1.1.100:8022/dicomExport/importAllDicomToMoveR", Body)
 		}
 		return
 	}
