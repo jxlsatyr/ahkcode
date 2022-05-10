@@ -1,5 +1,4 @@
-﻿#SingleInstance, Force
-#Include JSON.ahk
+﻿#Include JSON.ahk
 #Include HTTPRequest.ahk
 
 class DicomDecrypt {

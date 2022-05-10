@@ -1,4 +1,3 @@
-#SingleInstance, Force
 #Include MySQLAPI.ahk
 
 Global MySQL_SUCCESS := 0
@@ -20,9 +19,7 @@ If !My_DB.Real_Connect(Server, UserID, UserPW, Database, Port) {
    MsgBox, 16, MySQL Error!, % "Connection failed!`r`n" . My_DB.ErrNo() . " - " . My_DB.Error()
    ExitApp
 }
-; Select the database as default
-;~ My_DB.Select_DB(Database)
-
+	
 ; 查询并返回对象数组
 Query(SQL) {
 	global My_DB
@@ -40,7 +37,7 @@ Query(SQL) {
 			Objs.Push(Obj)
 		}
 	} Else {
-		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error()
+		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error() ": " SQL
 	}
 	return Objs
 }
@@ -52,7 +49,7 @@ Update(SQL) {
 	If (My_DB.Query(SQL) = MySQL_SUCCESS) {
 		Rows := My_DB.Affected_Rows()
 	} Else {
-		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error()
+		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error() ": " SQL
 	}
 	return Rows
 }
@@ -62,12 +59,12 @@ Count(SQL) {
 	global My_DB
 	Num := 0
 	If (My_DB.Query(SQL) = MySQL_SUCCESS) {
-		My_Result := My_DB.Store_Result()
-		My_Row := My_DB.Fetch_Row(My_Result)
-		Num := NumGet(My_Row + 0, 0, "UPtr")
-		My_DB.Free_Result(My_Result)
+		Result := My_DB.Store_Result()
+		Row := My_DB.Fetch_Row(Result)
+		Num := StrGet(NumGet(Row + 0, 0, "UPtr"), "UTF-8")
+		My_DB.Free_Result(Result)
 	} Else {
-		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error()
+		MsgBox, 16, MySQL Error!, % My_DB.ErrNo() . ": " . My_DB.Error() ": " SQL
 	}
 	return Num
 }

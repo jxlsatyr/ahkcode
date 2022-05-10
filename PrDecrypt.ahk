@@ -1,5 +1,4 @@
-﻿#SingleInstance, Force
-#Include JSON.ahk
+﻿#Include JSON.ahk
 #Include HTTPRequest.ahk
 
 class PrDecrypt {
@@ -33,7 +32,7 @@ class PrDecrypt {
 		SetControlDelay -1  ; May improve reliability and reduce side effects.
 		ControlClick, WindowsForms10.BUTTON.app.0.141b42a_r12_ad11, ahk_pid %PID%,,,, NA
 		timer := this.timer
-		SetTimer, % timer, 10000
+		SetTimer, % timer, 5000
 	}
 	
 	Compress() {
