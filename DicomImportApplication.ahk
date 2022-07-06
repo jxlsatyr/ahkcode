@@ -2,7 +2,6 @@
 #SingleInstance, Force
 SetBatchLines, -1
 #Include DicomDecrypt.ahk
-#Include PrDecrypt.ahk
 #Include MySQL.ahk
 #Include JSON.ahk
 #Include HTTPRequest.ahk

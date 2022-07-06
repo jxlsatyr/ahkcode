@@ -1,17 +1,17 @@
 ﻿#Persistent
 #SingleInstance, Force
 SetBatchLines, -1
-#Include PRDecrypt.ahk
+#Include DicomDuplicateDecrypt.ahk
 #Include MySQL.ahk
 #Include JSON.ahk
 #Include HTTPRequest.ahk
 
 ; 每10分钟查询是否有PR导出完成的任务
-SetTimer, PRImport, 10000
+SetTimer, PRRecoverImport, 10000
 
-PRImport:
+PRRecoverImport:
 MySQL := new MySQL()
-SQL := "SELECT id, tenant_id, project_id, src_accno, version FROM t_dicom_export WHERE is_deleted = 0 AND status in (6, 16) AND decrypted = 0 AND dst_type IN ('toMoveImp','toMoveRecoverImp') ORDER BY create_time ASC LIMIT 10"
+SQL := "SELECT id, tenant_id, project_id, src_accno, version FROM t_dicom_export WHERE is_deleted = 0 AND status = 6 AND decrypted = 0 AND dst_type = 'toMoveRecoverExp' ORDER BY create_time ASC LIMIT 10"
 Objs := Query(SQL)
 Loop % Objs.Length()
 {
@@ -23,7 +23,7 @@ Loop % Objs.Length()
 	ProjectID := Objs[A_Index].project_id
 	SrcAccno := Objs[A_Index].src_accno
 	Version := Objs[A_Index].version
-
+	
 	SQL := "SELECT zip_file_path FROM t_dicom_export WHERE is_deleted = 0 AND status = 6 AND dst_type = 'toMovePr' AND project_id = '" ProjectID "'"
 	Results := Query(SQL)
 	if (Results.Length() <= 0) {
@@ -35,11 +35,12 @@ Loop % Objs.Length()
 	Rows := Update(SQL)
 	if (Rows > 0) {
 		; 需要解压的文件路径
-		ZipFilePath := StrReplace(StrReplace(ZipFilePath, "/data/eimage", "z:"), "/", "\")
-		SrcPath := ZipFilePath "\dcm\" SrcAccno
+		ZipFilePath := StrReplace(StrReplace(ZipFilePath, "/data/eimage", "z:"), "/", "\") 
+		SrcPath := ZipFilePath "\dcmRecoverFull\" SrcAccno
 		if FileExist(SrcPath) {
-			DecryptPath := ZipFilePath "\dcm_decoded\" SrcAccno
-			Obj := new PRDecrypt(TenantID, ProjectID, SrcPath, DecryptPath, SrcAccno)
+			DecryptPath := ZipFilePath "\dcmRecoverFull_decoded\" SrcAccno
+			FileRemoveDir, %DecryptPath%, 1
+			Obj := new DicomDuplicateDecrypt(TenantID, ProjectID, SrcPath, DecryptPath, SrcAccno)
 			obj.Start()
 		}
 	}
