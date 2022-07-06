@@ -1,28 +1,23 @@
 ﻿#Include JSON.ahk
 #Include HTTPRequest.ahk
 
-class DicomDecrypt {
+class DicomDuplicateDecrypt {
 
-	; 7-Zip解压工具路径
-	static 7Zip := "C:\Program Files\7-Zip\7z.exe"
 	; EBM解密工具路径
 	static DecryptDICOMTools := "C:\Users\tm_adminuser\Desktop\D2New\DecryptDICOMTools.exe"
 	; 解密进度监控
 	timer := ObjBindMethod(this, "Compress")
 
-	__New(TenantID, ProjectId, DirName, ACCNO) {
+	__New(TenantID, ProjectId, SrcPath, DecryptPath, ACCNO) {
 		this.TenantID := TenantID
 		this.ProjectId := ProjectId
-		; 要解压的文件路径
-		this.SrcPath := "D:\" ProjectId "\source\" DirName
-		; 解密至文件路径
-		this.DecryptPath := "D:\" ProjectId "\decrypt\" DirName
-		; 打包至文件路径
-		this.UploadPath := "Z:\ebm_data\upload\" ProjectId "\" DirName ".zip"
-		; 上传接口用路径
-		this.UploadPathAPI := "/data/eimage/ebm_data/upload/" ProjectId "/" DirName ".zip"
-		; ACCNO
 		this.ACCNO := ACCNO
+		; 要解压的文件路径
+		this.SrcPath := SrcPath
+		; 解密至文件路径
+		this.DecryptPath := DecryptPath
+		; 上传接口用路径
+		this.UploadPathAPI := "/data/eimage/ebm_data_toMovePr/" ProjectId "/"
 	}
 	
 	Start() {
@@ -37,7 +32,7 @@ class DicomDecrypt {
 		SetControlDelay -1  ; May improve reliability and reduce side effects.
 		ControlClick, WindowsForms10.BUTTON.app.0.141b42a_r12_ad11, ahk_pid %PID%,,,, NA
 		timer := this.timer
-		SetTimer, % timer, 10000
+		SetTimer, % timer, 5000
 	}
 	
 	Compress() {
@@ -47,16 +42,10 @@ class DicomDecrypt {
 		{
 			SetTimer,, Off  ; 即此处计时器关闭自己.
 			WinClose, ahk_pid %PID%
-			; 3.打包到指定目录
-			RunWait , % this.7Zip " a -mx1 -tzip " this.UploadPath " " this.DecryptPath "\*"
+			
 			; 调用导入微云接口
-			Body := JSON.Dump({"accnoAndPaths":[{"accno":this.ACCNO,"path":this.UploadPathAPI}],"realDo":true,"srcProject":{"projectId":this.ProjectID,"tenantId":this.TenantID}})
-			POST("http://10.1.1.100:8022/dicomExport/importAllDicomToMoveR", Body)
-			; 删除对应的影像文件，释放磁盘空间
-			SrcPath := this.SrcPath
-			DecryptPath := this.DecryptPath
-			FileRemoveDir, %SrcPath%, 1
-			FileRemoveDir, %DecryptPath%, 1
+			Body := JSON.Dump({"accnoAndPath":{"accno":this.ACCNO,"path":this.UploadPathAPI},"realDo":true,"srcProject":{"projectId":this.ProjectID,"tenantId":this.TenantID}})
+			POST("http://10.1.1.100:8022/dicomExport/importAllDicomToMoveRecoverR",Body )
 		}
 		return
 	}

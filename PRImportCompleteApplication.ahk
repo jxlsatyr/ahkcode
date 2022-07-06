@@ -7,10 +7,9 @@ SetBatchLines, -1
 
 ; 每10分钟查询PR导出是否完成
 SetTimer, PRImportComplete, 600000
-return
 
 PRImportComplete:
-SQL := "SELECT id, project_id, version FROM t_dicom_migration WHERE is_deleted = 0 AND STATUS = 6 ORDER BY create_time desc LIMIT 10"
+SQL := "SELECT id, project_id, version FROM t_dicom_migration WHERE is_deleted = 0 AND STATUS = 6 ORDER BY create_time desc"
 Objs := Query(SQL)
 Loop % Objs.Length()
 {
@@ -30,8 +29,11 @@ Loop % Objs.Length()
 		ExportNum++
 	}
 	; 影像导入数量
-	SQL := "SELECT COUNT(*) FROM t_dicom_export WHERE is_deleted = 0 AND status = 6 AND dst_type = 'toMovePrImp' AND project_id = '" ProjectID "'"
+	SQL := "SELECT COUNT(DISTINCT src_accno) FROM t_dicom_export WHERE is_deleted = 0 AND status IN (6, 16) AND dst_type = 'toMovePrImp' AND project_id = '" ProjectID "'"
 	ImportNum := Count(SQL)
+	;~ MsgBox, % ProjectID
+	;~ MsgBox, % ExportNum
+	;~ MsgBox, % ImportNum
 	if (ExportNum = ImportNum) {
 		SQL := "UPDATE t_dicom_migration SET status = 7, version = version + 1, update_time = now() WHERE id = '" ID "' AND version = '" Version "'"
 		Update(SQL)

@@ -1,7 +1,7 @@
 ﻿#Include JSON.ahk
 #Include HTTPRequest.ahk
 
-class PrDecrypt {
+class PRDecrypt {
 
 	; EBM解密工具路径
 	static DecryptDICOMTools := "C:\Users\tm_adminuser\Desktop\D2New\DecryptDICOMTools.exe"
